@@ -1,0 +1,42 @@
+---
+- hosts: localhost
+  connection: local
+  
+  vars:
+      cluster: "{{(lookup('env','CLUSTER'))}}"
+      rosa_token: "{{(lookup('env','ROSA_TOKEN'))}}"
+
+  tasks:
+
+      - import_tasks: configure-aws.yml
+
+      - name: login ROSA
+        shell: rosa login --token {{ rosa_token }}
+
+      - name: Run Backup
+        shell: /usr/local/bin/backup.sh  
+
+      - name: get rosa cluster id
+        shell: > 
+              rosa list cluster|
+              /bin/awk 'NR==2{print $1}'
+        register: id_cluster
+
+
+      # - name: debug
+      #   debug:
+      #     msg: '{{ id_cluster.stdout }}'
+      
+      - name: Delete cluster ROSA
+        shell: rosa delete cluster -c {{ cluster }} -y
+        register: delete_cluster_rosa
+
+      - name: Pause for 10 minutes to destroy Cluster
+        pause:
+          minutes: 10
+      
+      - name: Delete Operator account
+        shell: rosa delete operator-roles -c {{ id_cluster.stdout }} -m auto -y
+      
+      - name: Delete oidc-provider
+        shell: rosa delete oidc-provider -c {{ id_cluster.stdout }} -m auto -y

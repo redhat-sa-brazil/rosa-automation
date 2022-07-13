@@ -1,0 +1,77 @@
+---
+- hosts: localhost
+  connection: local
+  
+  vars:
+      cluster: "{{(lookup('env','CLUSTER'))}}"
+      pvtsubnet1: "{{(lookup('env','PVTSUBNET1'))}}"
+      pvtsubnet2: "{{(lookup('env','PVTSUBNET2'))}}"
+      pvtsubnet3: "{{(lookup('env','PVTSUBNET3'))}}"
+      pubsubnet1: "{{(lookup('env','PUBSUBNET1'))}}"
+      pubsubnet2: "{{(lookup('env','PUBSUBNET2'))}}"
+      pubsubnet3: "{{(lookup('env','PUBSUBNET3'))}}"
+      machine_cidr: "{{(lookup('env','MACHINE_CIDR'))}}"
+      cluster_password: "{{(lookup('env','CLUSTER_PASSWORD'))}}"
+      rosa_token: "{{(lookup('env','ROSA_TOKEN'))}}"
+
+  tasks:
+      - import_tasks: configure-aws.yml
+      
+      - name: login ROSA
+        shell: rosa login --token {{ rosa_token }}
+
+      - name: Create OCM Role ROSA
+        shell: rosa create ocm-role --admin --prefix ocm-{{ cluster }}  --mode auto --yes
+        ignore_errors: yes
+
+      - name: Create User ROSA 
+        shell: rosa create user-role -m auto --prefix user-{{ cluster }} -y
+        ignore_errors: yes
+
+      - name: Create Role ROSA
+        shell: rosa create account-roles -m auto --prefix role-{{ cluster }} -y
+        ignore_errors: yes
+      
+      - name: Create Cluster ROSA
+        shell: rosa create cluster --cluster-name {{ cluster }} --multi-az --operator-roles-prefix operator-{{ cluster }} --controlplane-iam-role control-{{ cluster }} --worker-iam-role worker-{{ cluster }} --support-role-arn support-{{ cluster }} --version 4.10.18 --subnet-ids {{ pvtsubnet1 }},{{ pvtsubnet2 }},{{ pvtsubnet3 }},{{ pubsubnet1 }},{{ pubsubnet2 }},{{ pubsubnet3 }} --machine-cidr {{ machine_cidr }} --sts -m auto -y
+        register: cluster_rosa_output
+      
+      - name: Pause for 30 minutes to build Cluster
+        pause:
+          minutes: 30
+
+      - name: Create Cluster-Admin
+        shell: rosa create admin -c {{ cluster }} -p {{ cluster_password }}
+        register: cluster_admin_output
+
+      - name: Create Machine pool "m5.xlarge" ondemand with autoscaling
+        shell: rosa create machinepool --cluster={{ cluster }} --enable-autoscaling --min-replicas="3" --max-replicas="3" --name="worker-scaling" --labels='instance=ondemand' --instance-type="m5.xlarge"
+      
+      - name: Create Machine pool "c5.4xlarge" spot with autoscaling
+        shell: rosa create machinepool --cluster={{ cluster }} --enable-autoscaling --min-replicas="3" --max-replicas="9" --name="worker-spot" --labels='instance=spot' --use-spot-instances --spot-max-price='on-demand' --instance-type='c5.4xlarge'
+
+      - name: Register output Cluster
+        copy:
+          content: '{{ cluster_rosa_output.stdout }}'
+          dest: cluster_log
+
+      - name: Register output Password
+        copy:
+          content: '{{ cluster_admin_output.stdout }}'
+          dest: cluster_admin_password
+
+      - name: read os.txt content
+        ansible.builtin.debug:
+          msg: "{{ cluster_admin_output.stdout }}"
+
+      - name: match url and print it
+        ansible.builtin.set_fact:
+          oc_url: "{{ cluster_admin_output.stdout | regex_search('(https:\/\/)[a-zA-Z0-9.\/?:@-_=#]+.([a-zA-Z]){2,6}([a-zA-Z0-9.&\/?:@-_=#])*',multiline=True) }}"
+
+      - name: show oc_url content
+        ansible.builtin.debug:
+          msg: "{{ oc_url }}"
+
+
+    #rosa create idp --cluster=$CLUSTER_NAME --name="CEA" --type="ldap" --mapping-method="claim" --url='ldap://authldap.brasil.latam.cea/OU=CEA,DC=brasil,DC=latam,DC=cea?sAMAccountName' --bind-dn='CN=SERV_OPENSHIFT,OU=Servicos,OU=ECE,DC=brasil,DC=latam,DC=cea' --bind-password="${LDAP_PASSWD}" --id-attributes="sAMAccountName" --username-attributes="sAMAccountName" --name-attributes="cn" --email-attributes="mail" --insecure
+

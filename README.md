@@ -1,0 +1,19 @@
+# rosa-automation
+ROSA Automation
+
+Create ROSA Cluster
+
+Vars env example
+
+    CLUSTER=rocpah1
+    PVTSUBNET1=subnet-0e551de44cad0f2ba
+    PVTSUBNET2=subnet-06294bb5abed06b73
+    PVTSUBNET3=subnet-089dc3a9bb958c98c
+    PUBSUBNET1=subnet-0fe2d5606cb39fe21
+    PUBSUBNET2=subnet-0858ea3f56736a950
+    PUBSUBNET3=subnet-029dd8889f5eeaafc
+    MACHINE_CIDR=10.244.0.0/16
+    CLUSTER_PASSWORD="XXXXXXXXX"
+    REGION=us-east-1
+    AWS_ACCESS_KEY=XXXXXXXXXXXXXXXXXXXXX
+    AWS_SECRET_ACCESS_KEY=XXXXXXXXXXXXXXXXXXXXXXX
