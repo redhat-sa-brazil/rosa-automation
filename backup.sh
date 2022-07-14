@@ -1,5 +1,5 @@
 #!/bin/bash
-# backup openshift 
+# backup openshift by Filipe Calo - fcalo@redhat.com
 # Global Configurations
 #======================
 set -e
@@ -20,8 +20,8 @@ function get_configmap {
   oc get configmap -n ${1} -o=yaml | sed -e '/resourceVersion: "[0-9]\+"/d' -e '/uid: [a-z0-9-]\+/d' -e '/selfLink: [a-z0-9A-Z/]\+/d'
 }
 
-function get_ingress {
-  oc get ing -n ${1} -o=yaml | sed -e '/status:/,+2d' -e '/\- ip: \([0-9]\{1,3\}\.\)\{3\}[0-9]\{1,3\}/d' -e '/resourceVersion: "[0-9]\+"/d' -e '/uid: [a-z0-9-]\+/d' -e '/selfLink: [a-z0-9A-Z/]\+/d'
+function get_route {
+  oc get route -n ${1} -o=yaml | sed -e '/status:/,+2d' -e '/\- ip: \([0-9]\{1,3\}\.\)\{3\}[0-9]\{1,3\}/d' -e '/resourceVersion: "[0-9]\+"/d' -e '/uid: [a-z0-9-]\+/d' -e '/selfLink: [a-z0-9A-Z/]\+/d'
 }
 
 function get_service {
