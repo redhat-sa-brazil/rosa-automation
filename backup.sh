@@ -9,7 +9,7 @@ BACKUP_DIR=/opt/redhat/backup-yaml
 #AWS_CMD=/usr/bin/aws
 #TIME_STAMP=$(date +%Y-%m-%d_%H-%M)
 ######################
-rosa login -t $ROSA_TOKEN
+
 oc login -u cluster-admin -p $CLUSTER_PASSWORD `rosa describe cluster -c rocpah1 | grep API |awk '{print $3}'`
 
 function get_secret {

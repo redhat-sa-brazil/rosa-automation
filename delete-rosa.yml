@@ -14,7 +14,7 @@
         shell: rosa login --token {{ rosa_token }}
 
       - name: Run Backup
-        shell: /usr/local/bin/backup.sh  
+        shell: /opt/redhat/automacao/backup.sh  
 
       - name: get rosa cluster id
         shell: > 
