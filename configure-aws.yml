@@ -1,26 +1,20 @@
 ---
-- hosts: localhost
-  connection: local
-
-  tasks:
-
-    - name: Creating directory aws
-      file:
-        path: "~/.aws"
-        state: directory
-      ignore_errors: yes
-      
-    - name: Create credentials file aws
-      copy:
-        dest: "~/.aws/credentials"
-        content: | 
-          [default]
-          aws_access_key_id = "{{(lookup('env','AWS_ACCESS_KEY'))}}"
-          aws_secret_access_key = "{{(lookup('env','AWS_SECRET_ACCESS_KEY'))}}"
-
-    - name: Create config file aws
-      copy:
-        dest: "~/.aws/config"
-        content: | 
-          [default]
-          region = "{{(lookup('env','REGION'))}}"
+  - name: Creating directory aws
+    file:
+      path: "~/.aws"
+      state: directory
+    ignore_errors: yes
+    
+  - name: Create credentials file aws
+    copy:
+      dest: "~/.aws/credentials"
+      content: | 
+        [default]
+        aws_access_key_id = "{{(lookup('env','AWS_ACCESS_KEY'))}}"
+        aws_secret_access_key = "{{(lookup('env','AWS_SECRET_ACCESS_KEY'))}}"
+  - name: Create config file aws
+    copy:
+      dest: "~/.aws/config"
+      content: | 
+        [default]
+        region = "{{(lookup('env','REGION'))}}"
