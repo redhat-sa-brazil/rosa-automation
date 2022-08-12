@@ -13,6 +13,7 @@
       machine_cidr: "{{(lookup('env','MACHINE_CIDR'))}}"
       cluster_password: "{{(lookup('env','CLUSTER_PASSWORD'))}}"
       rosa_token: "{{(lookup('env','ROSA_TOKEN'))}}"
+      version: "{{(lookup('env','ROSA_VERSION'))}}"
 
   tasks:
       - import_tasks: configure-aws.yml
@@ -33,7 +34,7 @@
         ignore_errors: yes
       
       - name: Create Cluster ROSA
-        shell: rosa create cluster --cluster-name {{ cluster }} --multi-az --operator-roles-prefix operator-{{ cluster }} --controlplane-iam-role control-{{ cluster }} --worker-iam-role worker-{{ cluster }} --support-role-arn support-{{ cluster }} --version 4.10.18 --subnet-ids {{ pvtsubnet1 }},{{ pvtsubnet2 }},{{ pvtsubnet3 }},{{ pubsubnet1 }},{{ pubsubnet2 }},{{ pubsubnet3 }} --machine-cidr {{ machine_cidr }} --sts -m auto -y
+        shell: rosa create cluster --cluster-name {{ cluster }} --multi-az --operator-roles-prefix operator-{{ cluster }} --controlplane-iam-role control-{{ cluster }} --worker-iam-role worker-{{ cluster }} --support-role-arn support-{{ cluster }} --version {{ version }} --subnet-ids {{ pvtsubnet1 }},{{ pvtsubnet2 }},{{ pvtsubnet3 }},{{ pubsubnet1 }},{{ pubsubnet2 }},{{ pubsubnet3 }} --machine-cidr {{ machine_cidr }} --sts -m auto -y
         register: cluster_rosa_output
       
       - name: Pause for 30 minutes to build Cluster
